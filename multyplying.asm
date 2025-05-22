@@ -1,19 +1,40 @@
 .data
 
-l1: 		.word 5 # mnożna
-l2: 		.word 2 # mnożnik
 result:  	.word 0	  # wynik
 overflow_msg:   .asciiz "Result overflowed"
+prompt1:        .asciiz "Enter multiplicand: "
+prompt2:        .asciiz "Enter multiplier:   "
 
 
 .text
+# $t0 - mnożna
+# $t1 - mnożnik
+# $t2 - wynik
+# $t3 - bufor dla ostatniej cyfry mnożnika
+
 main:
-	# wczytanie liczb
-	lw $t0, l1
-	lw $t1, l2
+	# wyświetlenie prompt1 - prośy o mnożną
+	li $v0, 4
+	la $a0, prompt1
+	syscall
+
+	# odczyt mnożnej
+	li $v0, 5
+	syscall
+	move $t0, $v0  # wczytanie mnożnej do rejestru
+
+	# wyświetlenie prompt2 - prośy o mnożnik
+	li $v0, 4
+	la $a0, prompt2
+	syscall
+
+	# odczyt mnożnika
+	li $v0, 5
+	syscall
+	move $t1, $v0  # wczytanie mnożnika do rejestru
 	
-	li $t2, 0 # wynik
-	li $t3, 0 # sprawdzenie ostatniej cyfry
+	# inicjalizacja rejetru wyniku
+	li $t2, 0
 	
 loop:
 	beqz $t1, end # jeśli mnożnik = 0 - zakoncz
