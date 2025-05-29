@@ -1,11 +1,15 @@
 .data
 
-N: .word 15 # stała n, ilość liczb
+N: .word 100000 # stała n, ilość liczb
+nprimes: .word 0
+numall: .space 400004 # N * 4 + 4, żeby zapisać też 0
+primes: .space 400004
+sqrtN: .word 317 # wystarczy sprawdzić do i = 10
 amntText: .asciiz "Ilosc liczb pierwszych: "
 showText: .ascii "Liczby pierwsze: "
 space: .asciiz " "
 newline: .asciiz "\n"
-nprimes: .word 0
+
 
 .text
 # $s0 - liczba N
@@ -17,13 +21,7 @@ nprimes: .word 0
 
 main:
     lw $s0, N
-    
-    add $t1, $s0, 1    # uwzględnienie 0 w tablicy - ułatwienie operacji
-    sll $t0, $t1, 2    # wyliczenie ilości potrzebnego miejsca na tablicę - 4 bajty na liczbę
-    li $v0, 9
-    move $a0, $t0
-    syscall
-    move $s1, $v0      # zapisanie adresu początku tablicy
+    la $s1, numall     # zapisanie adresu początku tablicy numall
     
     move $t2, $s1
     li $t3, 0
@@ -39,26 +37,29 @@ init_loop:
 
 end_init:
 
+    li $t1, 1
+    sll $t1, $t1, 2
+    add $t1, $s1, $t1
+    sw $zero, 0($t1)          # numall[1] = 0
+
 ##### tablica uzupełniona cyframi
 # $s0 - liczba N
 # $s1 - adres tablicy
+# $s2 - sqrtN
 # $t0 - iterator pierwszy - i
 # $t1 - iterator drugi - j
 # $t2 - aktualny adres
 # $t3 - mnożenie i do aktualnego adresu
-# $t4 - ilość liczb pierwszych
 
-    li $t4, 0          # licznik liczb pierwszych
+	lw $s2, sqrtN
     li $t0, 2          # iterację zaczynamy od 2
 for_i:
-    bgt $t0, $s0, sito_end # warunek pętli 1
+    bgt $t0, $s2, sito_end # warunek pętli 1
     
     sll $t3, $t0, 2    # ustawienie adresu na i
     add $t2, $s1, $t3
     lw $t5, 0($t2)     # załaduj wartość z pamięci
     beq $t5, $zero, next_i # jeśli już wykreślona, pomiń
-    
-    addi $t4, $t4, 1   # inkrementacja licznika liczb pierwszych
     
     move $t1, $t0      # j = i
     add $t1, $t1, $t0  # j = 2*i
@@ -66,7 +67,7 @@ for_j:
     bgt $t1, $s0, next_i # Warunek pętli 2
     
     sll $t3, $t1, 2    # ustawienie adresu na j
-    add $t2, $s1, $t3  # ustawienie adresu na j
+    add $t2, $s1, $t3  
     
     sw $zero, 0($t2)   # wyzerowanie pod danym adresem
     add $t1, $t1, $t0  # j += i
@@ -78,39 +79,57 @@ next_i:
 
 sito_end:
 
-##### wyswietlenie ilosci liczb
+##### tablica zostawiła tylko liczby pierwsze, przepisanie do nowej tablicy:
+# $s0 - liczba N
+# $s1 - adres numall
+# $s2 - sqrtN
+# $t0 - aktualny adres numall
+# $t1 - koncowy adres numall
+# $t3 - aktualny adres primes
+# $t4 - licznik liczb pierwszych
 
+	la $t0, numall         # adres początku tablicy numall
+    li $t5, 100001            # N + 1 elementów
+    sll $t5, $t5, 2        # rozmiar w bajtach
+    add $t1, $t0, $t5      # oblicz adres końca tablicy
+    la $t3, primes         # adres docelowej tablicy primes
+    li $t4, 0              # licznik liczb pierwszych
+	
+save_primes_loop:
+	bge $t0, $t1, print_init 
+	
+	lw $t6, 0($t0)         # załaduj wartość z numall
+    beqz $t6, skip_save    # jeśli 0 (nie pierwsza), pomiń
+		sw $t6, 0($t3)
+		addi $t3, $t3, 4
+		addi $t4, $t4, 1
+skip_save:
+	addi $t0, $t0, 4
+	j save_primes_loop
+
+print_init:
+	sw $t4, nprimes
+	
+	# Wydrukuj nagłówek
     li $v0, 4
     la $a0, amntText
     syscall
-
+    
+    # Wydrukuj ilość
     li $v0, 1
-    move $a0, $t4
+    lw $a0, nprimes
     syscall
     
+    # Nowa linia
     li $v0, 4
     la $a0, newline
     syscall
-
-    sw $t4, nprimes
-##### tablica zostawiła tylko liczby pierwsze, przepisanie do nowej tablicy:
-# $s0 - liczba N
-# $s1 - adres tablicy 1
-# $s2 - adres nowej tablicy
-# $t0 - iterator pierwszy - i
-# $t1 - iterator drugi - j
-# $t2 - aktualny adres
-# $t3 - mnożenie i do aktualnego adresu
-# $t4 - ilość liczb pierwszych
-
-
-print_init:
-
+	
     li $t1, 0          # iterator (i = 0)
-    move $t2, $s1      # $t2 - aktualny adres w tablicy
+    la $t2, primes
 
 print_loop:
-    bgt $t1, $s0, end_print   # jeśli i > N, zakończ
+    bge $t1, $t4, end_print   # jeśli i > N, zakończ
 
     lw $a0, 0($t2)     # wczytaj liczbę z tablicy do $a0
     li $v0, 1          # kod syscall do print_int
