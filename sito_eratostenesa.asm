@@ -5,6 +5,7 @@ amntText: .asciiz "Ilosc liczb pierwszych: "
 showText: .ascii "Liczby pierwsze: "
 space: .asciiz " "
 newline: .asciiz "\n"
+nprimes: .word 0
 
 .text
 # $s0 - liczba N
@@ -91,6 +92,7 @@ sito_end:
     la $a0, newline
     syscall
 
+    sw $t4, nprimes
 ##### tablica zostawiła tylko liczby pierwsze, przepisanie do nowej tablicy:
 # $s0 - liczba N
 # $s1 - adres tablicy 1
