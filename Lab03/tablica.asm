@@ -141,37 +141,53 @@ operation_loop:
 	
 
 odczyt:
-	# wyświetlanie 
-	la $a0, odczytText
-	li $v0, 4
-	syscall
-	
-	li $v0, 1
-	lw $a0, ($t5) # wyswietlenie wartosci
-	syscall
-	
-	la $a0, newline
-	li $v0, 4
-	syscall
+    # wyświetlanie
+    la $a0, odczytText
+    li $v0, 4
+    syscall
+    
+    move $a0, $t5     # skopiowanie adresu odczytu do odpowiedniego rejestru, obsługiwanego przez podprogram
+    jal read_data     # wywołanie podprogramu odczytu
+    
+    move $a0, $v0     # odczytujemy z podprogramu wartość do wyświetlenia
+    li $v0, 1
+    syscall
+    
+    la $a0, newline
+    li $v0, 4
+    syscall
 
-	j operation_loop # powrót do wyboru operacji
+    j operation_loop # powrót do wyboru operacji
 
 zapis:
-	# pobranie wartości podanej przez użytkownika
-	la $a0, zapisText
-	li $v0, 4
-	syscall
-	
-	
-	li $v0, 5
-	syscall
-	move $t6, $v0
-	
-	sw $t6, ($t5) # wpisanie wartości
+    # pobranie wartości podanej przez użytkownika
+    la $a0, zapisText
+    li $v0, 4
+    syscall
+    
+    li $v0, 5
+    syscall
+    move $a1, $v0     # przekazujemy podprogramowi w odpowiednim rejestrze wartość do zapisania
+    
+    move $a0, $t5     # skopiowanie adresu zapisu do odpowiedniego rejestru, obsługiwanego przez podprogram
+    jal write_data    # wywołanie podprogramu zapisu
 
-	j operation_loop # powrót do wyboru operacji
+    j operation_loop # powrót do wyboru operacji
+
 
 end:
 
 	li $v0, 10
 	syscall
+	
+	
+	
+####### Podprogram odczytu #########
+read_data:
+    lw $v0, 0($a0)   # odczyt z pamięci pod adresem w $a0
+    jr $ra           # powrót
+
+####### Podprogram zapisu #########
+write_data:
+    sw $a1, 0($a0)   # zapis wartości $a1 pod adres $a0
+    jr $ra           # powrót
