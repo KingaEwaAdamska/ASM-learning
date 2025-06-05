@@ -37,20 +37,20 @@ main:
     move $t0, $s3
     
     # Zapisuję początkowy adres drugiego poziomu tablicy:
-    move $t2, $s3
     move $t1, $s0
-    sll $t1, $t1, 4 # Wyznaczam ilość bajtów, o którą muszę przesunąć adres $s0, by uzyskać początek drugiego poziomu tablicy
-    add $t2, $t2, $t1 # Teraz $t2 zawiera początkowy adres drugiego poziomu tablicy
+    sll $t1, $t1, 2 # Wyznaczam ilość bajtów, o którą muszę przesunąć adres $s0, by uzyskać początek drugiego poziomu tablicy
+    add $t2, $s3, $t1 # Teraz $t2 zawiera początkowy adres drugiego poziomu tablicy
     
     move $t1, $s1
-    sll $t1, $t1, 4 # Wyznaczam ilość bajtów, o którą muszę przesunąć adres $t2, żeby przejść do następnej kolumny
+    sll $t1, $t1, 2 # Wyznaczam ilość bajtów, o którą muszę przesunąć adres $t2, żeby przejść do następnej kolumny
     
     li $t3, 0
-    mul $t4, $s1, 100 # Mnożenie wykonuje się tylko raz przez cały program
+    mul $t4, $s0, 100 # Mnożenie wykonuje się tylko raz przez cały program
     
 create_loop:
     bge $t3, $t4, end_create_loop
-    move $t0, $t2 # Zapisuję adres $t2 jako następny adres kolumny
+    
+    sw $t2, ($t0) # Zapisuję adres $t2 jako następny adres kolumny
     sw $t3, ($t2) # Zapisuję do pierwszej komórki w kolumnie wartość
     
     addi $t3, $t3, 100 # Przechodzę do następnej wartości w pierwszej komórce w kolumnie
@@ -59,3 +59,37 @@ create_loop:
     j create_loop
     
 end_create_loop:
+
+move $t0, $s3        # wskaźnik do tablicy wskaźników (poziom 1)
+li $t5, 0            # indeks wiersza
+
+outer_loop:
+    bge $t5, $s0, end_loop
+
+    lw $t1, ($t0)     # wczytaj wskaźnik do tablicy kolumn (wiersz)
+    li $t6, 0         # indeks kolumny
+
+    inner_loop:
+        bge $t6, $s1, end_inner_loop
+
+        lw $a0, ($t1)
+        li $v0, 1
+        syscall
+
+        li $v0, 4
+        la $a0, space
+        syscall
+
+        addi $t1, $t1, 4
+        addi $t6, $t6, 1
+        j inner_loop
+    end_inner_loop:
+
+    li $v0, 4
+    la $a0, newline
+    syscall
+
+    addi $t0, $t0, 4
+    addi $t5, $t5, 1
+    j outer_loop
+end_loop:
