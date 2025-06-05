@@ -96,7 +96,7 @@ operation_loop:
 	
 	li $v0, 12
 	syscall
-	move $t0, $v0
+	move $t0, $v0 # wczytanie znaku wprowadzonego przez użytkownika - UWAGA! nie czeka na zatwierdzenie Enter
 	
 	la $a0, newline
 	li $v0, 4
@@ -112,7 +112,7 @@ operation_loop:
 	li $v0, 5
 	syscall
 	
-	move $t1, $v0
+	move $t1, $v0 # wczytanie wiersza
 	
 ########## Wybór kolumny #########
 	la $a0, kolumnaText
@@ -122,9 +122,9 @@ operation_loop:
 	li $v0, 5
 	syscall
 	
-	move $t2, $v0
+	move $t2, $v0 # wczytanie kolumny
 
-########## Pobranie adresu #########
+########## Pobranie adresu potrzebnego do operacji #########
 	sll $t3, $t1, 2 # wyznaczam ilość bajtów do przesunięcia by dotrzeć do dobrego adresu poziomu 1
 	add $t4, $s2, $t3 # przechodzę pod odpowiedni adres, by być w dobrym wierszu
 	
@@ -137,7 +137,7 @@ operation_loop:
 	beq $t0, 'z', zapis
 	beq $t0, 'o', odczyt
 	
-	j operation_loop
+	j operation_loop # powrót do wyboru operacji, jeśli podano błędny znak
 	
 
 odczyt:
@@ -147,30 +147,31 @@ odczyt:
 	syscall
 	
 	li $v0, 1
-	lw $a0, ($t5)
+	lw $a0, ($t5) # wyswietlenie wartosci
 	syscall
-	
-	move $t2, $v0
 	
 	la $a0, newline
 	li $v0, 4
 	syscall
 
-	j operation_loop
+	j operation_loop # powrót do wyboru operacji
 
 zapis:
-
+	# pobranie wartości podanej przez użytkownika
 	la $a0, zapisText
 	li $v0, 4
 	syscall
 	
+	
 	li $v0, 5
 	syscall
-	
 	move $t6, $v0
 	
-	sw $t6, ($t5)
+	sw $t6, ($t5) # wpisanie wartości
 
-	j operation_loop
+	j operation_loop # powrót do wyboru operacji
 
 end:
+
+	li $v0, 10
+	syscall
