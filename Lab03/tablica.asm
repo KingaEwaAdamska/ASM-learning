@@ -53,6 +53,29 @@ create_loop:
     sw $t2, ($t0) # Zapisuję adres $t2 jako następny adres kolumny
     sw $t3, ($t2) # Zapisuję do pierwszej komórki w kolumnie wartość
     
+    # $t3 - wielokrotność setki
+    # $t2 - adre pierwszej kolumny
+    # $t4 - wartość do wpisania do kolumn
+    # $t5 - wartość kończąca wewnętrzną pętlę
+    
+    move $t5, $t3
+    add $t6, $t3, $s0 # ustalam wartość końcową wypełniania kolumny
+    
+    move $t7, $t2 # ustalam adres do wypełnienia kolumny
+    
+    
+    fill_loop:
+    	bge $t5, $t6, end_fill_loop
+    	
+    	addi $t5, $t5, 1
+    	addi $t7, $t7, 4
+    	
+    	sw $t5, 0($t7)
+    	
+    	j fill_loop
+    end_fill_loop:
+   
+    
     addi $t3, $t3, 100 # Przechodzę do następnej wartości w pierwszej komórce w kolumnie
     addi $t0, $t0, 4 # Przechodzę do następnej komórki pierwszego poziomu
     add $t2, $t2, $t1 # Przechodzę do pierwszego adresu następnej kolumny
@@ -60,6 +83,21 @@ create_loop:
     
 end_create_loop:
 
+	# Zapisuję początkowy adres pierwszego poziomu tablicy:
+	move $t0, $s3
+	sll $t1, $t1, 2 # Wyznaczam ilość bajtów, o którą muszę przesunąć adres $s0, by uzyskać początek drugiego poziomu tablicy
+    add $t2, $s3, $t1 # Teraz $t2 zawiera początkowy adres drugiego poziomu tablicy
+fill_loop_outer:
+	fill_loop_inner:
+
+
+	end_fill_loop_inner:
+end_fill_loop_outer:
+
+
+
+
+# WYSWIETLANIE PEŁNEJ TABLICY
 move $t0, $s3        # wskaźnik do tablicy wskaźników (poziom 1)
 li $t5, 0            # indeks wiersza
 
