@@ -10,8 +10,8 @@ sys_stack_addr: .word 0
 stack: .space STACK_SIZE
 
 # deklaracja tablicy globalnej global_array
-global_array:  .word 1,2,3,4,5,6,7,8,9,10,11,12,13
-global_array_size: .word 13
+global_array:  .word 1,2,3,4,5,6,7,8,9,10
+global_array_size: .word 10
 
 # ============================================
 .text
